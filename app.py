@@ -1,6 +1,7 @@
 # legal_faq_api/app.py
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pathlib import Path
 import pandas as pd
 import logging
@@ -83,3 +84,19 @@ def get_faq_by_id(faq_id: int):
     if matched.empty:
         raise HTTPException(status_code=404, detail="FAQ not found")
     return matched.iloc[0].to_dict()
+
+@app.get("/faqs-html", response_class=HTMLResponse)
+def get_faqs_html():
+    """
+    Returns FAQs as a simple HTML page (for Copilot Studio Website Q&A ingestion).
+    """
+    if df.empty:
+        return "<html><body><h1>No FAQs Available</h1></body></html>"
+
+    html_content = "<html><head><title>Legal FAQs</title></head><body>"
+    html_content += "<h1>Legal FAQs</h1><ul>"
+    for _, row in df.iterrows():
+        html_content += f"<li><b>Q:</b> {row['question']}<br><b>A:</b> {row['answer']}</li><br>"
+    html_content += "</ul></body></html>"
+
+    return html_content
